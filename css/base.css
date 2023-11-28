@@ -1,0 +1,13 @@
+.tooltip-layer {
+    position: relative;
+}
+
+.tooltip {
+    position: absolute;
+    padding: 10px;
+    background-color: #fff16e;
+    border: 1px solid #000;
+    border-radius: 5px;
+    opacity: 100;
+}
+

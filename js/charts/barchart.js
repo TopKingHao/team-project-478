@@ -1,4 +1,13 @@
-function DrawBarChart(targetElem, width, height, margin, data) {
+function DrawBarChart(targetElem, width, height, margin, data, options) {
+    const clickCallback = options.clickCallback
+    const mouseMoveCallback = options.mouseMoveCallback
+    const mouseOutCallback = options.mouseOutCallback
+    const mouseOverCallback = options.mouseOverCallback
+
+    let barColor = options.barColor
+    if (!barColor) {
+        barColor = '#FEFEB6'
+    }
 
     // SVG element
     const svg = d3.select(targetElem, width, height, margin)
@@ -36,7 +45,7 @@ function DrawBarChart(targetElem, width, height, margin, data) {
         .attr("height", d => height - margin - y(d.value))
         .attr("stroke", "black")
         .attr("stroke-width", 1)
-        .attr("fill", "#FEFEB6");
+        .attr("fill", barColor);
 
     // Draw axes
     svg.append("g")
@@ -47,25 +56,27 @@ function DrawBarChart(targetElem, width, height, margin, data) {
         .attr("transform", `translate(${margin}, 0)`)
         .call(yAxis);
 
+    svg.selectAll(".bar").on("click", (d, i) => {
+        if (clickCallback) {
+            clickCallback(d, i)
+        }
+    });
     svg.selectAll(".bar").on("mouseover", (d, i) => {
-        const count = i.value;
-        const elem = document.getElementById("character-name");
-        elem.innerText = count;
+        if (mouseOverCallback) {
+            mouseOverCallback(d, i)
+        }
     });
 
     svg.selectAll(".bar").on("mousemove", (d, i) => {
-        const letter = i.key;
-        const count = i.value;
-        tooltip.html(`<div>Character: ${letter}</div> <div>Count: ${count}</div>`)
-            .style("left", d.clientX + "px")
-            .style("top", (d.clientY - tooltip.node().clientHeight - 10) + "px")
-            .style("opacity", 1);
+        if (mouseMoveCallback) {
+            mouseMoveCallback(d, i)
+        }
     });
 
     svg.selectAll(".bar").on("mouseout", (d, i) => {
-        tooltip
-            .style("opacity", 0);
+        if (mouseOutCallback) {
+            mouseOutCallback(d, i)
+        }
     });
-
-
+    return Array.from(svg.selectAll(".bar").nodes())
 }

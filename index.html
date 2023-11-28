@@ -1,21 +1,73 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-  <title>Homework #2: D3 Simple - CSE 478 - Fall 2023</title>
+  <title>Team Project - CSE 478 - Fall 2023</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="css/base.css">
   <script src="https://d3js.org/d3.v7.min.js"></script>
-  <script src="js/barchart.js"></script>
-  <script src="js/main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+
 </head>
 <body>
 <div class="container">
   <h1 class="text-center">Team Project - Visualizing Global COVID-19 Spread</h1>
-  <h3 class="text-center">Confirmed COVID-19 cases in China</h3>
-  <div id="myDataVis">
-    <!-- create svg here -->
-    <svg id="bar_svg"></svg>
-
+  <h3 class="text-center">Data Report Generator</h3>
+  <div class="row">
+    <form>
+      <div class="form-group">
+        <label for="country">Select a country:</label>
+        <select id="country" class="form-control">
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="date">Select a date begin:</label>
+        <select id="date" class="form-control">
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="duration">Select a duration:</label>
+        <select id="duration" class="form-control">
+        </select>
+      </div>
+      <div class="form-group mt-4">
+        <button onclick="generateReport()" type="button" class="btn btn-primary">Generate Report</button>
+      </div>
+    </form>
   </div>
+  <div class="row mt-5">
+    <h5>Total Confirmed, Deaths and Recovered Cases From <span class="dateFrom"></span> To <span class="dateTo"></span></h5>
+    <div id="pieChart" class="tooltip-layer">
+      <svg id="pieChartSvg"></svg>
+    </div>
+  </div>
+  <div class="row mt-5">
+    <h5>Deaths Cases Each Day From <span class="dateFrom"></span> To <span class="dateTo"></span></h5>
+    <div id="barChart" class="tooltip-layer">
+      <svg id="barChartSvg"></svg>
+    </div>
+  </div>
+  <div class="row mt-5">
+    <h5>Accumulated Confirmed, Deaths and Recovered Cases From <span class="dateFrom"></span> To <span class="dateTo"></span></h5>
+    <div id="lollipopChart" class="tooltip-layer">
+      <svg id="lollipopChartSvg"></svg>
+    </div>
+  </div>
+  <div class="row mt-5">
+    <h5>Bubble Chart of Confirmed and Deaths Cases For All Countries at <span class="dateFrom"></span></h5>
+    <div id="bubbleChart" class="tooltip-layer">
+      <svg id="bubbleChartSvg"></svg>
+    </div>
+  </div>
+
 </div> <!-- This is the end of the container div -->
 </body>
+<script src="js/data/data_query_framework.js"></script>
+<script src="js/data/data_process.js"></script>
+<script src="js/charts/barchart.js"></script>
+<script src="js/charts/piechart.js"></script>
+<script src="js/charts/lollipopchart.js"></script>
+<script src="js/charts/bubblechart.js"></script>
+<script src="js/ui/tooltip.js"></script>
+<script src="js/ui/ui_builder.js"></script>
+<script src="js/main.js"></script>
 </html>
