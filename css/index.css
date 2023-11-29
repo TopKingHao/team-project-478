@@ -14,10 +14,24 @@
     margin: 5px 0;
 }
 
-#advices {
-
+.quickChartContent {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
 }
 
-.advice-item {
-    
+#advices {
+    font-size: 12px;
+}
+
+.advice {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.advice:hover {
+    background-color: #d0d0d0;
 }

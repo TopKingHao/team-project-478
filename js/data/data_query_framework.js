@@ -87,7 +87,16 @@ function queryAtDate(countryData, countryNames, dateColumns, targetDate) {
         result.push({key: country, confirmed: item.confirmed, deaths: item.deaths, recovered: item.recovered})
     }
     return result
+}
 
+function queryDailyAtDate(countryData, countryNames, dateColumns, targetDate) {
+    let result = []
+
+    for (const country of countryNames) {
+        const item = countryData[country][targetDate]
+        result.push({key: country, confirmed: item.daily_confirmed, deaths: item.daily_deaths, recovered: item.daily_recovered})
+    }
+    return result
 }
 
 function buildBubbleData(data, xField, rField) {
@@ -111,3 +120,4 @@ function buildBubbleData(data, xField, rField) {
 
     return result
 }
+

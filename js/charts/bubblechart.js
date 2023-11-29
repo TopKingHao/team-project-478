@@ -217,7 +217,11 @@ function DrawBubbleChart(targetElem, width, height, margin, data, options = {}) 
 
 }
 
-function UpdateBubbleChart(targetElem, width, height, margin, data) {
+function UpdateBubbleChart(targetElem, width, height, margin, data, options={}) {
+    const clickCallback = options.clickCallback
+    const mouseMoveCallback = options.mouseMoveCallback
+    const mouseOutCallback = options.mouseOutCallback
+    const mouseOverCallback = options.mouseOverCallback
 
     const maxX = d3.max(data, d => d.x)
     const minX = d3.min(data, d => d.x)

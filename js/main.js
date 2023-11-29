@@ -4,23 +4,249 @@
 const width = 1000;
 const height = 600;
 
+const quickChartWidth = 1000;
+const quickChartHeight = 600;
+
 const dateColumns = []
 let countryData = {}
 let countryNames = []
 
-const myDataVisElem = document.getElementById('myDataVis')
-
 const countryElem = document.getElementById('country')
 const dateElem = document.getElementById('date')
 const durationElem = document.getElementById('duration')
+const bubbleDateFromElem = document.getElementById('bubbleDateFrom')
 
 const barChartElem = document.getElementById('barChart')
 const lollipopChartElem = document.getElementById('lollipopChart')
 const bubbleChartElem = document.getElementById('bubbleChart')
+const quickChartElem = document.getElementById('quickChart')
 
 let currentDayIndex = 0
 
 // This function is called once the HTML page is fully loaded by the browser
+
+function showPieChartAdvices(type, targetCountry, dateFromIndex, dateToIndex) {
+    ShowAdvices([
+        {
+            title: `Show ${type} cases from ${dateColumns[dateFromIndex]} to ${dateColumns[dateToIndex]}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+
+                let tmpData = []
+                if (type === 'confirmed') {
+                    tmpData = queryConfirmedInDateRange(countryData, countryNames, dateColumns, targetCountry, dateFromIndex, dateToIndex)
+                } else if (type === 'deaths') {
+                    tmpData = queryDeathsInDateRange(countryData, countryNames, dateColumns, targetCountry, dateFromIndex, dateToIndex)
+                } else if (type === 'recovered') {
+                    tmpData = queryRecoveredInDateRange(countryData, countryNames, dateColumns, targetCountry, dateFromIndex, dateToIndex)
+                }
+                DrawBarChart('#quickChartSvg', quickChartWidth, quickChartHeight, 100, tmpData, {
+                    mouseMoveCallback(d, i) {
+                        showTooltipHtml(quickChartElem, buildPropertyTableTooltip(['Date', 'Value'], [formatShortDate(i.key), i.value]), d.layerX, d.layerY)
+                    }, mouseOutCallback(d, i) {
+                        removeAllTooltip(quickChartElem)
+                    }
+                });
+            }
+        },
+        {
+            title: `Show daily ${type} cases from ${dateColumns[dateFromIndex]} to ${dateColumns[dateToIndex]}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+
+                let tmpData = []
+                if (type === 'confirmed') {
+                    tmpData = queryDailyConfirmedInDateRange(countryData, countryNames, dateColumns, targetCountry, dateFromIndex, dateToIndex)
+                } else if (type === 'deaths') {
+                    tmpData = queryDailyDeathsInDateRange(countryData, countryNames, dateColumns, targetCountry, dateFromIndex, dateToIndex)
+                } else if (type === 'recovered') {
+                    tmpData = queryDailyRecoveredInDateRange(countryData, countryNames, dateColumns, targetCountry, dateFromIndex, dateToIndex)
+                }
+                DrawBarChart('#quickChartSvg', quickChartWidth, quickChartHeight, 100, tmpData, {
+                    mouseMoveCallback(d, i) {
+                        showTooltipHtml(quickChartElem, buildPropertyTableTooltip(['Date', 'Value'], [formatShortDate(i.key), i.value]), d.layerX, d.layerY)
+                    }, mouseOutCallback(d, i) {
+                        removeAllTooltip(quickChartElem)
+                    }
+                });
+            }
+        },
+
+    ])
+}
+
+
+function showBarChartAdvices(date) {
+    ShowAdvices([
+        {
+            title: `Show each country confirmed case at ${formatShortDate(date)}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+                const tmpData = queryAtDate(countryData, countryNames, dateColumns, date)
+                DrawPieChart('#quickChartSvg', width, height, 50, tmpData.map(x => ({
+                    key: x.key,
+                    value: x.confirmed
+                })))
+                console.log(tmpData)
+            }
+        },
+        {
+            title: `Show each country deaths case at ${formatShortDate(date)}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+                const tmpData = queryAtDate(countryData, countryNames, dateColumns, date)
+                DrawPieChart('#quickChartSvg', width, height, 50, tmpData.map(x => ({
+                    key: x.key,
+                    value: x.deaths
+                })))
+                console.log(tmpData)
+            }
+        },
+        {
+            title: `Show each country recovered case at ${formatShortDate(date)}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+                const tmpData = queryDailyAtDate(countryData, countryNames, dateColumns, date)
+                DrawPieChart('#quickChartSvg', width, height, 50, tmpData.map(x => ({
+                    key: x.key,
+                    value: x.recovered
+                })))
+                console.log(tmpData)
+            }
+        },
+        {
+            title: `Show each country daily confirmed case at ${formatShortDate(date)}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+                const tmpData = queryDailyAtDate(countryData, countryNames, dateColumns, date)
+                DrawPieChart('#quickChartSvg', width, height, 50, tmpData.map(x => ({
+                    key: x.key,
+                    value: x.confirmed
+                })))
+                console.log(tmpData)
+            }
+        },
+        {
+            title: `Show each country daily deaths case at ${formatShortDate(date)}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+                const tmpData = queryDailyAtDate(countryData, countryNames, dateColumns, date)
+                DrawPieChart('#quickChartSvg', width, height, 50, tmpData.map(x => ({
+                    key: x.key,
+                    value: x.deaths
+                })))
+                console.log(tmpData)
+            }
+        },
+        {
+            title: `Show each country daily recovered case at ${formatShortDate(date)}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+                const tmpData = queryAtDate(countryData, countryNames, dateColumns, date)
+                DrawPieChart('#quickChartSvg', width, height, 50, tmpData.map(x => ({
+                    key: x.key,
+                    value: x.recovered
+                })))
+                console.log(tmpData)
+            }
+        }
+    ])
+}
+
+function showBubbleChartAdvices(country, durationDays) {
+    let startIndex = currentDayIndex
+    let endIndex = startIndex + durationDays
+    if (endIndex >= dateColumns.length) {
+        endIndex = dateColumns.length - 1
+    }
+    ShowAdvices([
+        {
+            title: `Show confirm cases from ${formatShortDate(dateColumns[startIndex])} to ${formatShortDate(dateColumns[endIndex])} in ${country}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+                const tmpData = queryConfirmedInDateRange(countryData, countryNames, dateColumns, country, startIndex, endIndex)
+                DrawBarChart('#quickChartSvg', quickChartWidth, quickChartHeight, 100, tmpData, {
+                    mouseMoveCallback(d, i) {
+                        showTooltipHtml(quickChartElem, buildPropertyTableTooltip(['Date', 'Value'], [formatShortDate(i.key), i.value]), d.layerX, d.layerY)
+                    }, mouseOutCallback(d, i) {
+                        removeAllTooltip(quickChartElem)
+                    }
+                });
+            }
+        },
+        {
+            title: `Show deaths cases from ${formatShortDate(dateColumns[startIndex])} to ${formatShortDate(dateColumns[endIndex])} in ${country}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+                const tmpData = queryDeathsInDateRange(countryData, countryNames, dateColumns, country, startIndex, endIndex)
+                DrawBarChart('#quickChartSvg', quickChartWidth, quickChartHeight, 100, tmpData, {
+                    mouseMoveCallback(d, i) {
+                        showTooltipHtml(quickChartElem, buildPropertyTableTooltip(['Date', 'Value'], [formatShortDate(i.key), i.value]), d.layerX, d.layerY)
+                    }, mouseOutCallback(d, i) {
+                        removeAllTooltip(quickChartElem)
+                    }
+                });
+            }
+        },
+        {
+            title: `Show recovered cases from ${formatShortDate(dateColumns[startIndex])} to ${formatShortDate(dateColumns[endIndex])} in ${country}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+                const tmpData = queryRecoveredInDateRange(countryData, countryNames, dateColumns, country, startIndex, endIndex)
+                DrawBarChart('#quickChartSvg', quickChartWidth, quickChartHeight, 100, tmpData, {
+                    mouseMoveCallback(d, i) {
+                        showTooltipHtml(quickChartElem, buildPropertyTableTooltip(['Date', 'Value'], [formatShortDate(i.key), i.value]), d.layerX, d.layerY)
+                    }, mouseOutCallback(d, i) {
+                        removeAllTooltip(quickChartElem)
+                    }
+                });
+            }
+        },
+        {
+            title: `Show daily confirm cases from ${formatShortDate(dateColumns[startIndex])} to ${formatShortDate(dateColumns[endIndex])} in ${country}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+                const tmpData = queryDailyConfirmedInDateRange(countryData, countryNames, dateColumns, country, startIndex, endIndex)
+                DrawBarChart('#quickChartSvg', quickChartWidth, quickChartHeight, 100, tmpData, {
+                    mouseMoveCallback(d, i) {
+                        showTooltipHtml(quickChartElem, buildPropertyTableTooltip(['Date', 'Value'], [formatShortDate(i.key), i.value]), d.layerX, d.layerY)
+                    }, mouseOutCallback(d, i) {
+                        removeAllTooltip(quickChartElem)
+                    }
+                });
+            }
+        },
+        {
+            title: `Show daily deaths cases from ${formatShortDate(dateColumns[startIndex])} to ${formatShortDate(dateColumns[endIndex])} in ${country}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+                const tmpData = queryDailyDeathsInDateRange(countryData, countryNames, dateColumns, country, startIndex, endIndex)
+                DrawBarChart('#quickChartSvg', quickChartWidth, quickChartHeight, 100, tmpData, {
+                    mouseMoveCallback(d, i) {
+                        showTooltipHtml(quickChartElem, buildPropertyTableTooltip(['Date', 'Value'], [formatShortDate(i.key), i.value]), d.layerX, d.layerY)
+                    }, mouseOutCallback(d, i) {
+                        removeAllTooltip(quickChartElem)
+                    }
+                });
+            }
+        },
+        {
+            title: `Show daily recovered cases from ${formatShortDate(dateColumns[startIndex])} to ${formatShortDate(dateColumns[endIndex])} in ${country}`,
+            callback() {
+                $('#quickChartModel').modal('show');
+                const tmpData = queryDailyRecoveredInDateRange(countryData, countryNames, dateColumns, country, startIndex, endIndex)
+                DrawBarChart('#quickChartSvg', quickChartWidth, quickChartHeight, 100, tmpData, {
+                    mouseMoveCallback(d, i) {
+                        showTooltipHtml(quickChartElem, buildPropertyTableTooltip(['Date', 'Value'], [formatShortDate(i.key), i.value]), d.layerX, d.layerY)
+                    }, mouseOutCallback(d, i) {
+                        removeAllTooltip(quickChartElem)
+                    }
+                });
+            }
+        },
+
+    ])
+}
 
 function generateReport() {
     const targetCountry = countryElem.value
@@ -31,20 +257,26 @@ function generateReport() {
     if (dateToIndex + durationDays >= dateColumns.length) {
         dateToIndex = dateColumns.length - 1
     }
+    quickChartElem.style.width = `${quickChartWidth}px`
+    quickChartElem.style.height = `${quickChartHeight}px`
 
 
     $('.dateFrom').text(formatShortDate(dateFrom))
     $('.dateTo').text(formatShortDate(dateColumns[dateToIndex]))
 
     const dataForPieChart = queryTotalInDateRange(countryData, countryNames, dateColumns, targetCountry, dateFromIndex, dateToIndex)
-    DrawPieChart('#pieChartSvg', width, height, 50, dataForPieChart, {});
+    DrawPieChart('#pieChartSvg', width, height, 50, dataForPieChart, {
+        clickCallback(d, i) {
+            const type = i.key
+            showPieChartAdvices(type, targetCountry, dateFromIndex, dateToIndex)
+        }
+    });
 
 
     const dataForBarChart = queryDailyDeathsInDateRange(countryData, countryNames, dateColumns, targetCountry, dateFromIndex, dateToIndex)
-    DrawBarChart('#barChartSvg', width, height, 50, dataForBarChart, {
+    DrawBarChart('#barChartSvg', width, height, 100, dataForBarChart, {
         clickCallback(d, i) {
-            console.log(d)
-            console.log(i)
+            showBarChartAdvices(i.key)
         }, mouseMoveCallback(d, i) {
             showTooltipHtml(barChartElem, buildPropertyTableTooltip(['Date', 'Value'], [formatShortDate(i.key), i.value]), d.layerX, d.layerY)
         }, mouseOutCallback(d, i) {
@@ -60,6 +292,10 @@ function generateReport() {
     const tmp = queryAtDate(countryData, countryNames, dateColumns, dateFrom)
     const bubbleData = buildBubbleData(tmp, 'confirmed', 'deaths')
     DrawBubbleChart('#bubbleChartSvg', width, 800, 100, bubbleData, {
+        clickCallback(d, i) {
+            const country = i.datum.data.key
+            showBubbleChartAdvices(country, durationDays)
+        },
         mouseMoveCallback(d, i) {
             showTooltipHtml(bubbleChartElem, buildPropertyTableTooltip(['Country', 'Confirmed', 'Deaths', 'Recovered'], [i.datum.data.key, i.datum.data.confirmed, i.datum.data.deaths, i.datum.data.recovered]), d.layerX, d.layerY)
         }, mouseOutCallback(d, i) {
@@ -68,36 +304,51 @@ function generateReport() {
     })
 
     currentDayIndex = dateFromIndex
+    bubbleDateFromElem.innerText = dateColumns[currentDayIndex]
 
 }
 
 function onPrevDayClick() {
+    const durationDays = parseInt(durationElem.value)
+
     if (currentDayIndex - 1 >= 0) {
         currentDayIndex--;
         const tmp = queryAtDate(countryData, countryNames, dateColumns, dateColumns[currentDayIndex])
         const bubbleData = buildBubbleData(tmp, 'confirmed', 'deaths')
         UpdateBubbleChart('#bubbleChartSvg', width, 800, 100, bubbleData, {
+            clickCallback(d, i) {
+                const country = i.datum.data.key
+                showBubbleChartAdvices(country, durationDays)
+            },
             mouseMoveCallback(d, i) {
                 showTooltipHtml(bubbleChartElem, buildPropertyTableTooltip(['Country', 'Confirmed', 'Deaths', 'Recovered'], [i.datum.data.key, i.datum.data.confirmed, i.datum.data.deaths, i.datum.data.recovered]), d.layerX, d.layerY)
             }, mouseOutCallback(d, i) {
                 removeAllTooltip(bubbleChartElem)
             }
         })
+        bubbleDateFromElem.innerText = dateColumns[currentDayIndex]
     }
 }
 
 function onNextDayClick() {
+    const durationDays = parseInt(durationElem.value)
+
     if (currentDayIndex + 1 < dateColumns.length) {
         currentDayIndex++;
         const tmp = queryAtDate(countryData, countryNames, dateColumns, dateColumns[currentDayIndex])
         const bubbleData = buildBubbleData(tmp, 'confirmed', 'deaths')
         UpdateBubbleChart('#bubbleChartSvg', width, 800, 100, bubbleData, {
+            clickCallback(d, i) {
+                const country = i.datum.data.key
+                showBubbleChartAdvices(country, durationDays)
+            },
             mouseMoveCallback(d, i) {
                 showTooltipHtml(bubbleChartElem, buildPropertyTableTooltip(['Country', 'Confirmed', 'Deaths', 'Recovered'], [i.datum.data.key, i.datum.data.confirmed, i.datum.data.deaths, i.datum.data.recovered]), d.layerX, d.layerY)
             }, mouseOutCallback(d, i) {
                 removeAllTooltip(bubbleChartElem)
             }
         })
+        bubbleDateFromElem.innerText = dateColumns[currentDayIndex]
     }
 
 }
