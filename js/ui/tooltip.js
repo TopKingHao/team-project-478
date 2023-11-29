@@ -40,3 +40,8 @@ function buildPropertyTableTooltip(propNames, propValues) {
     return div
 
 }
+
+function displayInfo(infoText) {
+    const infoElem = document.getElementById('info')
+    infoElem.innerText = infoText
+}

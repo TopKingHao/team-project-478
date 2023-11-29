@@ -76,11 +76,11 @@ function dataDiff(circles1, circles2) {
     const circles2Map = {}
 
     for (let circle of circles1) {
-        circles1Map[circle.datum.country] = circle
+        circles1Map[circle.datum.data.key] = circle
     }
 
     for (let circle of circles2) {
-        circles2Map[circle.datum.country] = circle
+        circles2Map[circle.datum.data.key] = circle
     }
 
     const cxList = []
@@ -90,11 +90,11 @@ function dataDiff(circles1, circles2) {
     const newCircles = []
 
     for (let circle of circles1) {
-        let country = circle.datum.country
-        if (country in circles2Map) {
-            cxList.push(circles2Map[country].x)
-            cyList.push(circles2Map[country].y)
-            rList.push(circles2Map[country].r)
+        let key = circle.datum.data.key
+        if (key in circles2Map) {
+            cxList.push(circles2Map[key].x)
+            cyList.push(circles2Map[key].y)
+            rList.push(circles2Map[key].r)
         } else {
             cxList.push(circle.x)
             cyList.push(circle.y)
@@ -102,8 +102,8 @@ function dataDiff(circles1, circles2) {
         }
     }
     for (let circle of circles2) {
-        let country = circle.datum.country
-        if (!(country in circles1Map)) {
+        let key = circle.datum.data.key
+        if (!(key in circles1Map)) {
             cxList.push(circle.x)
             cyList.push(circle.y)
             rList.push(circle.r)
@@ -189,17 +189,107 @@ function DrawBubbleChart(targetElem, width, height, margin, data, options = {}) 
                         mouseOutCallback(d, i)
                     }
                 })
-                .on("click", (d, i)=> {
+                .on("click", (d, i) => {
                     if (clickCallback) {
                         clickCallback(d, i)
                     }
                 })
-                .on("mousemove", (d, i)=> {
+                .on("mousemove", (d, i) => {
                     if (mouseMoveCallback) {
                         mouseMoveCallback(d, i)
                     }
                 })
 
+        });
+
+    circles = curCircles
+
+    const xScale = d3.scaleLinear()
+        .domain([minX, maxX])
+        .range([margin, width - margin]);
+    // Define the x-axis
+    const xAxis = d3.axisBottom(xScale);
+    svg.selectAll("g").remove();
+    // Draw the x-axis
+    svg.append("g")
+        .attr("transform", `translate(0, ${height - margin})`)
+        .call(xAxis);
+
+}
+
+function UpdateBubbleChart(targetElem, width, height, margin, data) {
+
+    const maxX = d3.max(data, d => d.x)
+    const minX = d3.min(data, d => d.x)
+    const maxR = d3.max(data, d => d.r)
+    const minR = d3.min(data, d => d.r)
+
+    const svg = d3.select(targetElem, width, height, margin)
+        .attr("width", width)
+        .attr("height", height);
+
+    const curCircles = swarm(data, // map each data point to an x position (in pixels)
+        d => margin + (d.x - minX) / (maxX - minX) * (width - margin * 2), // map each data point to a radius (in pixels)
+        d => chartMinR + (d.r - minR) / (maxR - minR) * (chartMaxR - chartMinR), // map each data point to a priority which determines placement order (lower = earlier).
+        d => -d.r, height - margin - chartMaxR)
+
+    console.log(curCircles)
+    const [cxList, cyList, rList, newCircles] = dataDiff(circles, curCircles)
+
+    if (newCircles.length > 0) {
+        // Append circles to the SVG element
+        svg.selectAll('circle')
+            .data(newCircles)
+            .enter()
+            .append('circle')
+            .attr('cx', d => d.x)
+            .attr('cy', d => d.y)
+            .attr('r', 0)
+            .attr('fill', d => d.datum.color)
+    }
+
+    svg.selectAll("circle")
+        .transition()
+        .duration(chartDuration)
+        .attr("cx", function (d, i) {
+            return cxList[i];
+        })
+        .attr("cy", function (d, i) {
+            return cyList[i];
+        })
+        .attr("r", function (d, i) {
+            return rList[i];
+        })
+        .on("end", function () {
+            svg.selectAll("circle").remove();
+            svg.selectAll('circle')
+                .data(curCircles)
+                .enter()
+                .append('circle')
+                .attr('cx', d => d.x)
+                .attr('cy', d => d.y)
+                .attr('r', d => d.r)
+                .attr('fill', d => d.datum.color)
+                .on("mouseover", (d, i) => {
+                    if (mouseOverCallback) {
+                        mouseOverCallback(d, i)
+                    }
+                })
+                .on("mouseout", (d, i) => {
+                    if (mouseOutCallback) {
+                        mouseOutCallback(d, i)
+                    }
+                })
+                .on("click", (d, i) => {
+                    if (clickCallback) {
+                        clickCallback(d, i)
+                    }
+                })
+                .on("mousemove", (d, i) => {
+                    if (mouseMoveCallback) {
+                        mouseMoveCallback(d, i)
+                    }
+                })
         });
 
     circles = curCircles

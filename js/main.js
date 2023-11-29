@@ -18,6 +18,8 @@ const barChartElem = document.getElementById('barChart')
 const lollipopChartElem = document.getElementById('lollipopChart')
 const bubbleChartElem = document.getElementById('bubbleChart')
 
+let currentDayIndex = 0
+
 // This function is called once the HTML page is fully loaded by the browser
 
 function generateReport() {
@@ -34,14 +36,12 @@ function generateReport() {
     $('.dateFrom').text(formatShortDate(dateFrom))
     $('.dateTo').text(formatShortDate(dateColumns[dateToIndex]))
 
-    const dataForPieChart =  queryTotalInDateRange(countryData, countryNames, dateColumns, targetCountry, dateFromIndex, dateToIndex)
-    DrawPieChart('#pieChartSvg', width, height, 50, dataForPieChart,  {
-
-    });
+    const dataForPieChart = queryTotalInDateRange(countryData, countryNames, dateColumns, targetCountry, dateFromIndex, dateToIndex)
+    DrawPieChart('#pieChartSvg', width, height, 50, dataForPieChart, {});
 
 
     const dataForBarChart = queryDailyDeathsInDateRange(countryData, countryNames, dateColumns, targetCountry, dateFromIndex, dateToIndex)
-    DrawBarChart('#barChartSvg', width, height, 50, dataForBarChart,  {
+    DrawBarChart('#barChartSvg', width, height, 50, dataForBarChart, {
         clickCallback(d, i) {
             console.log(d)
             console.log(i)
@@ -59,7 +59,47 @@ function generateReport() {
 
     const tmp = queryAtDate(countryData, countryNames, dateColumns, dateFrom)
     const bubbleData = buildBubbleData(tmp, 'confirmed', 'deaths')
-    DrawBubbleChart('#bubbleChartSvg', width, 800, 100, bubbleData)
+    DrawBubbleChart('#bubbleChartSvg', width, 800, 100, bubbleData, {
+        mouseMoveCallback(d, i) {
+            showTooltipHtml(bubbleChartElem, buildPropertyTableTooltip(['Country', 'Confirmed', 'Deaths', 'Recovered'], [i.datum.data.key, i.datum.data.confirmed, i.datum.data.deaths, i.datum.data.recovered]), d.layerX, d.layerY)
+        }, mouseOutCallback(d, i) {
+            removeAllTooltip(bubbleChartElem)
+        }
+    })
+
+    currentDayIndex = dateFromIndex
+
+}
+
+function onPrevDayClick() {
+    if (currentDayIndex - 1 >= 0) {
+        currentDayIndex--;
+        const tmp = queryAtDate(countryData, countryNames, dateColumns, dateColumns[currentDayIndex])
+        const bubbleData = buildBubbleData(tmp, 'confirmed', 'deaths')
+        UpdateBubbleChart('#bubbleChartSvg', width, 800, 100, bubbleData, {
+            mouseMoveCallback(d, i) {
+                showTooltipHtml(bubbleChartElem, buildPropertyTableTooltip(['Country', 'Confirmed', 'Deaths', 'Recovered'], [i.datum.data.key, i.datum.data.confirmed, i.datum.data.deaths, i.datum.data.recovered]), d.layerX, d.layerY)
+            }, mouseOutCallback(d, i) {
+                removeAllTooltip(bubbleChartElem)
+            }
+        })
+    }
+}
+
+function onNextDayClick() {
+    if (currentDayIndex + 1 < dateColumns.length) {
+        currentDayIndex++;
+        const tmp = queryAtDate(countryData, countryNames, dateColumns, dateColumns[currentDayIndex])
+        const bubbleData = buildBubbleData(tmp, 'confirmed', 'deaths')
+        UpdateBubbleChart('#bubbleChartSvg', width, 800, 100, bubbleData, {
+            mouseMoveCallback(d, i) {
+                showTooltipHtml(bubbleChartElem, buildPropertyTableTooltip(['Country', 'Confirmed', 'Deaths', 'Recovered'], [i.datum.data.key, i.datum.data.confirmed, i.datum.data.deaths, i.datum.data.recovered]), d.layerX, d.layerY)
+            }, mouseOutCallback(d, i) {
+                removeAllTooltip(bubbleChartElem)
+            }
+        })
+    }
+
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -86,7 +126,10 @@ document.addEventListener('DOMContentLoaded', function () {
             buildDateCombobox(dateElem, dateColumns)
             buildDurationCombobox(durationElem, 10, 40)
 
-            countryElem.value = 'China'
+            countryElem.value = 'US'
+            dateElem.value = '10/26/20'
+
+            generateReport()
         });
 });
 
