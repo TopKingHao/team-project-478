@@ -4,7 +4,7 @@
 ## Team Members:
  - Member 1: Hao Zhen, 1215712108, hzhen3@asu.edu
  - Member 2: Akki Kishore, 1221618099, akishor3@asu.edu
- - Member 3: Valliappan
+ - Member 3: Valliappan Valliappan, 1217365019, vvalliap@asu.edu
 
 ## Overview:
 This project is used to display COVID-19 related charts. Users can choose the country, start date, and end date to view. The project can generate chart reports based on these parameters.
